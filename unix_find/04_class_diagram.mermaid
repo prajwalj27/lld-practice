@@ -1,0 +1,72 @@
+---
+title: Unix find - class diagram
+---
+classDiagram
+    direction TB
+
+    class FileFinder {
+        +find(root, file_filter) list[str]
+        -_walk(directory, path, file_filter, results) None
+    }
+
+    class Directory {
+        <<dataclass>>
+        +name str
+        +children dict[str, File or Directory]
+        +add_file(name, size_bytes) File
+        +add_directory(name) Directory
+    }
+
+    class File {
+        <<frozen dataclass>>
+        +name str
+        +size_bytes int
+        +extension str
+    }
+
+    class Filter {
+        <<abstract>>
+        +matches(file)* bool
+    }
+
+    class SizeFilter {
+        -_min_bytes int or None
+        -_max_bytes int or None
+        +matches(file) bool
+    }
+
+    class ExtensionFilter {
+        -_extension str
+        +matches(file) bool
+    }
+
+    class NameFilter {
+        -_pattern str
+        +matches(file) bool
+    }
+
+    class CompositeFilter {
+        <<abstract>>
+        -_filters tuple[Filter]
+    }
+
+    class AndFilter {
+        +matches(file) bool
+    }
+
+    class OrFilter {
+        +matches(file) bool
+    }
+
+    Directory "1" *-- "0..*" File : children
+    Directory "1" *-- "0..*" Directory : subdirectories
+    FileFinder ..> Directory : walks
+    FileFinder ..> Filter : applies to each file
+    Filter ..> File : matches(file)
+    SizeFilter --|> Filter
+    ExtensionFilter --|> Filter
+    NameFilter --|> Filter
+    CompositeFilter --|> Filter
+    AndFilter --|> CompositeFilter
+    OrFilter --|> CompositeFilter
+    CompositeFilter "1" o-- "1..*" Filter : combines

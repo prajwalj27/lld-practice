@@ -1,0 +1,62 @@
+---
+title: Connect Four - class diagram
+---
+classDiagram
+    direction TB
+
+    class Game {
+        -_board Board
+        -_player1 Player
+        -_player2 Player
+        -_current_player Player
+        -_state GameState
+        -_winner Player or None
+        +board Board
+        +current_player Player
+        +state GameState
+        +winner Player or None
+        +make_move(player, column) bool
+        -_other(player) Player
+    }
+
+    class Board {
+        +ROWS$ int
+        +COLS$ int
+        +WIN_LENGTH$ int
+        +DIRECTIONS$ tuple
+        -_grid list[list[DiscColor or None]]
+        +rows int
+        +cols int
+        +cell(row, col) DiscColor or None
+        +can_place(column) bool
+        +place_disc(column, color) int or None
+        +is_full() bool
+        +check_win(row, col, color) bool
+        -_count_in_direction(row, col, dr, dc, color) int
+        -_in_bounds(row, col) bool
+    }
+
+    class Player {
+        <<frozen dataclass>>
+        +name str
+        +color DiscColor
+    }
+
+    class DiscColor {
+        <<enumeration>>
+        RED
+        YELLOW
+    }
+
+    class GameState {
+        <<enumeration>>
+        IN_PROGRESS
+        WON
+        DRAW
+    }
+
+    Game "1" *-- "1" Board : creates
+    Game "1" o-- "2" Player : takes turns
+    Game --> GameState : state
+    Player --> DiscColor : color
+    Board "1" --> "0..42" DiscColor : grid cells

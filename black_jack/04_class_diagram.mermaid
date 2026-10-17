@@ -1,0 +1,136 @@
+---
+title: Blackjack - class diagram
+---
+classDiagram
+    direction TB
+
+    class BlackjackGame {
+        -_player Player
+        -_dealer Dealer
+        -_deck_factory Callable
+        -_deck Deck or None
+        -_bet int
+        -_state GameState
+        +state GameState
+        +player Player
+        +dealer Dealer
+        +dealer_visible_cards() tuple[Card]
+        +start_round(bet) RoundResult or None
+        +hit() RoundResult or None
+        +stand() RoundResult
+        -_compare_hands() Outcome
+        -_settle(outcome) RoundResult
+        -_deal_to(participant) None
+        -_require_state(expected, action) None
+    }
+
+    class Participant {
+        -_hand Hand
+        +hand Hand
+        +reset_hand() None
+    }
+
+    class Player {
+        +name str
+        -_balance int
+        +balance int
+        +place_bet(amount) None
+        +receive(amount) None
+    }
+
+    class Dealer {
+        +STAND_ON$ int
+        +should_hit() bool
+    }
+
+    class Hand {
+        -_cards list[Card]
+        +add(card) None
+        +cards tuple[Card]
+        +value int
+        +is_soft bool
+        +is_bust bool
+        +is_blackjack bool
+    }
+
+    class Deck {
+        -_cards list[Card]
+        +draw() Card
+        +__len__() int
+    }
+
+    class Card {
+        <<frozen dataclass>>
+        +rank Rank
+        +suit Suit
+    }
+
+    class RoundResult {
+        <<frozen dataclass>>
+        +outcome Outcome
+        +player_total int
+        +dealer_total int
+        +net_chips int
+    }
+
+    class Rank {
+        <<enumeration>>
+        TWO ... TEN
+        JACK
+        QUEEN
+        KING
+        ACE
+        +points int
+    }
+    class Suit {
+        <<enumeration>>
+        SPADES
+        HEARTS
+        DIAMONDS
+        CLUBS
+    }
+    class GameState {
+        <<enumeration>>
+        BETTING
+        PLAYER_TURN
+    }
+    class Outcome {
+        <<enumeration>>
+        PLAYER_BLACKJACK
+        PLAYER_WIN
+        DEALER_WIN
+        PUSH
+    }
+
+    class BlackjackError {
+        <<exception>>
+    }
+    class InvalidActionError {
+        <<exception>>
+    }
+    class InsufficientChipsError {
+        <<exception>>
+    }
+    class EmptyDeckError {
+        <<exception>>
+    }
+
+    BlackjackGame "1" o-- "1" Player : plays against dealer
+    BlackjackGame "1" *-- "1" Dealer : creates
+    BlackjackGame "1" *-- "0..1" Deck : fresh deck each round
+    BlackjackGame --> GameState : state
+    BlackjackGame ..> RoundResult : returns
+    Player --|> Participant
+    Dealer --|> Participant
+    Participant "1" *-- "1" Hand : holds
+    Deck "1" o-- "0..52" Card : cards to deal
+    Hand "1" o-- "0..*" Card : cards held
+    Card --> Rank
+    Card --> Suit
+    RoundResult --> Outcome
+    BlackjackGame ..> InvalidActionError : raises
+    Player ..> InsufficientChipsError : raises
+    Deck ..> EmptyDeckError : raises
+    InvalidActionError --|> BlackjackError
+    InsufficientChipsError --|> BlackjackError
+    EmptyDeckError --|> BlackjackError

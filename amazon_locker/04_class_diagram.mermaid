@@ -1,0 +1,71 @@
+---
+title: Amazon Locker - class diagram
+---
+classDiagram
+    direction TB
+
+    class Locker {
+        +TOKEN_TTL$ timedelta
+        +CODE_DIGITS$ int
+        -_compartments list[Compartment]
+        -_tokens dict[str, AccessToken]
+        -_clock Callable
+        +deposit_package(size) str
+        +pickup(code) None
+        +open_expired_compartments() list[str]
+        -_find_available_compartment(size) Compartment or None
+        -_generate_token(compartment) AccessToken
+        -_clear_deposit(token) None
+    }
+
+    class Compartment {
+        -_id str
+        -_size Size
+        -_occupied bool
+        +id str
+        +size Size
+        +is_occupied bool
+        +mark_occupied() None
+        +mark_free() None
+        +open() None
+    }
+
+    class AccessToken {
+        <<frozen dataclass>>
+        +code str
+        +expires_at datetime
+        +compartment Compartment
+        +is_expired(now) bool
+    }
+
+    class Size {
+        <<enumeration>>
+        SMALL
+        MEDIUM
+        LARGE
+    }
+
+    class LockerError {
+        <<exception>>
+    }
+    class NoCompartmentAvailableError {
+        <<exception>>
+    }
+    class InvalidTokenError {
+        <<exception>>
+    }
+    class ExpiredTokenError {
+        <<exception>>
+    }
+
+    Locker "1" o-- "1..*" Compartment : holds
+    Locker "1" *-- "0..*" AccessToken : creates and tracks by code
+    AccessToken "0..1" --> "1" Compartment : opens
+    Compartment --> Size : size
+    Locker ..> Size : deposit_package(size)
+    Locker ..> NoCompartmentAvailableError : raises
+    Locker ..> InvalidTokenError : raises
+    Locker ..> ExpiredTokenError : raises
+    NoCompartmentAvailableError --|> LockerError
+    InvalidTokenError --|> LockerError
+    ExpiredTokenError --|> LockerError

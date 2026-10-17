@@ -1,0 +1,38 @@
+---
+title: LRU Cache - class diagram
+---
+classDiagram
+    direction TB
+
+    class LRUCache {
+        -_capacity int
+        -_nodes dict[Hashable, Node]
+        -_order DoublyLinkedList
+        +get(key) Any or None
+        +put(key, value) None
+        +keys() list[Hashable]
+        +__len__() int
+    }
+
+    class DoublyLinkedList {
+        -_head Node
+        -_tail Node
+        +add_to_front(node) None
+        +remove(node) None
+        +move_to_front(node) None
+        +remove_last() Node or None
+        +__iter__() Iterator[Node]
+    }
+
+    class Node {
+        +key Hashable
+        +value Any
+        +prev Node or None
+        +next Node or None
+    }
+
+    LRUCache "1" *-- "1" DoublyLinkedList : _order
+    LRUCache "1" *-- "0..capacity" Node : creates on put, deletes on evict
+    DoublyLinkedList "1" *-- "2" Node : head and tail sentinels
+    DoublyLinkedList "1" o-- "0..capacity" Node : links real nodes
+    Node --> Node : prev and next

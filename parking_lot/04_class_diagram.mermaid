@@ -1,0 +1,68 @@
+---
+title: Parking Lot - class diagram
+---
+classDiagram
+    direction TB
+
+    class ParkingLot {
+        +MS_PER_HOUR$ int
+        -_SPOT_TYPE_FOR_VEHICLE$ dict[VehicleType, SpotType]
+        -_spots list[ParkingSpot]
+        -_hourly_rate_cents int
+        -_active_tickets dict[str, Ticket]
+        -_occupied_spot_ids set[str]
+        +enter(vehicle_type) Ticket
+        +exit(ticket_id) int
+        -_find_available_spot(vehicle_type) ParkingSpot or None
+        -_compute_fee(entry_ms, exit_ms) int
+        -_now_ms()$ int
+    }
+
+    class ParkingSpot {
+        <<frozen dataclass>>
+        +id str
+        +spot_type SpotType
+    }
+
+    class Ticket {
+        <<frozen dataclass>>
+        +id str
+        +spot_id str
+        +vehicle_type VehicleType
+        +entry_time_ms int
+    }
+
+    class VehicleType {
+        <<enumeration>>
+        MOTORCYCLE
+        CAR
+        LARGE
+    }
+
+    class SpotType {
+        <<enumeration>>
+        MOTORCYCLE
+        CAR
+        LARGE
+    }
+
+    class ParkingLotError {
+        <<exception>>
+    }
+    class NoSpotAvailableError {
+        <<exception>>
+    }
+    class InvalidTicketError {
+        <<exception>>
+    }
+
+    ParkingLot "1" o-- "*" ParkingSpot : holds
+    ParkingLot "1" *-- "0..*" Ticket : creates and tracks
+    Ticket ..> ParkingSpot : refers by spot_id
+    Ticket --> VehicleType : vehicle_type
+    ParkingSpot --> SpotType : spot_type
+    ParkingLot ..> VehicleType : maps to SpotType
+    ParkingLot ..> NoSpotAvailableError : raises
+    ParkingLot ..> InvalidTicketError : raises
+    NoSpotAvailableError --|> ParkingLotError
+    InvalidTicketError --|> ParkingLotError

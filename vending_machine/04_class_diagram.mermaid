@@ -1,0 +1,78 @@
+---
+title: Vending Machine - class diagram
+---
+classDiagram
+    direction TB
+
+    class VendingMachine {
+        -_slots dict[str, Slot]
+        -_balance_cents int
+        +balance_cents int
+        +add_slot(code, product, quantity) None
+        +insert(denomination) int
+        +select(code) PurchaseResult
+        +cancel() int
+        +restock(code, amount) None
+        -_get_slot(code) Slot
+    }
+
+    class Slot {
+        <<dataclass>>
+        +code str
+        +product Product
+        +quantity int
+        +is_empty() bool
+        +dispense_one() Product
+        +restock(amount) None
+    }
+
+    class Product {
+        <<frozen dataclass>>
+        +name str
+        +price_cents int
+    }
+
+    class PurchaseResult {
+        <<frozen dataclass>>
+        +product Product
+        +change_cents int
+    }
+
+    class Denomination {
+        <<enumeration>>
+        NICKEL = 5
+        DIME = 10
+        QUARTER = 25
+        ONE_DOLLAR = 100
+        FIVE_DOLLAR = 500
+    }
+
+    class VendingMachineError {
+        <<exception>>
+    }
+    class InvalidDenominationError {
+        <<exception>>
+    }
+    class InvalidSlotError {
+        <<exception>>
+    }
+    class OutOfStockError {
+        <<exception>>
+    }
+    class InsufficientFundsError {
+        <<exception>>
+    }
+
+    VendingMachine "1" *-- "0..*" Slot : creates in add_slot
+    Slot "0..*" o-- "1" Product : stocks
+    VendingMachine ..> Denomination : insert()
+    VendingMachine ..> PurchaseResult : returns from select()
+    PurchaseResult --> Product : dispensed
+    VendingMachine ..> InvalidDenominationError : raises
+    VendingMachine ..> InvalidSlotError : raises
+    VendingMachine ..> InsufficientFundsError : raises
+    Slot ..> OutOfStockError : raises
+    InvalidDenominationError --|> VendingMachineError
+    InvalidSlotError --|> VendingMachineError
+    OutOfStockError --|> VendingMachineError
+    InsufficientFundsError --|> VendingMachineError
