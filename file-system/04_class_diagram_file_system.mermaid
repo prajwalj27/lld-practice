@@ -1,0 +1,82 @@
+---
+title: File System - class diagram
+---
+classDiagram
+    direction TB
+
+    class FileSystem {
+        +ROOT_NAME$ str
+        -_root Folder
+        +root Folder
+        +create_file(path, content) File
+        +create_folder(path) Folder
+        +get(path) FileSystemEntry
+        +list_contents(path) list[FileSystemEntry]
+        +delete(path) None
+        +rename(path, new_name) None
+        +move(src_path, dest_path) None
+        -_resolve(path) FileSystemEntry
+        -_resolve_parent(path) tuple[Folder, str]
+        -_split(path) list[str]
+        -_walk(parts) FileSystemEntry
+        -_validate_name(name)$ None
+        -_check_name_free(folder, name)$ None
+        -_is_same_or_ancestor(candidate, start)$ bool
+    }
+
+    class FileSystemEntry {
+        <<abstract>>
+        -_name str
+        -_parent Folder or None
+        +name str
+        +parent Folder or None
+        +path str
+        +is_directory* bool
+    }
+
+    class File {
+        +content str
+        +is_directory bool
+    }
+
+    class Folder {
+        -_children dict[str, FileSystemEntry]
+        +is_directory bool
+        +children list[FileSystemEntry]
+        +get_child(name) FileSystemEntry or None
+        +has_child(name) bool
+        +add_child(entry) None
+        +remove_child(name) FileSystemEntry or None
+        +rename_child(old_name, new_name) None
+    }
+
+    class FileSystemError {
+        <<exception>>
+    }
+    class InvalidPathError {
+        <<exception>>
+    }
+    class EntryNotFoundError {
+        <<exception>>
+    }
+    class EntryExistsError {
+        <<exception>>
+    }
+    class NotAFolderError {
+        <<exception>>
+    }
+
+    FileSystem "1" *-- "1" Folder : root
+    File --|> FileSystemEntry
+    Folder --|> FileSystemEntry
+    Folder "1" *-- "0..*" FileSystemEntry : children by name
+    FileSystemEntry "0..*" --> "0..1" Folder : parent
+    FileSystem ..> File : creates
+    FileSystem ..> InvalidPathError : raises
+    FileSystem ..> EntryNotFoundError : raises
+    FileSystem ..> NotAFolderError : raises
+    Folder ..> EntryExistsError : raises
+    InvalidPathError --|> FileSystemError
+    EntryNotFoundError --|> FileSystemError
+    EntryExistsError --|> FileSystemError
+    NotAFolderError --|> FileSystemError
